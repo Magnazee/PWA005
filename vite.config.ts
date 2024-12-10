@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/PWA005/',  // Add base URL for GitHub Pages
+  base: '/PWA005/',
   plugins: [
     react(),
     VitePWA({ 
@@ -13,13 +13,28 @@ export default defineConfig({
         name: 'Claude Chat Interface',
         short_name: 'Claude Chat',
         theme_color: '#ffffff',
+        background_color: '#ffffff',
+        display: 'standalone',
         icons: [
           {
-            src: '/PWA005/vite.svg',  // Update icon paths with base URL
+            src: 'pwa-icon.svg',  // We'll create this icon
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/svg+xml',
+            purpose: 'any'
+          },
+          {
+            src: 'pwa-icon.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml',
+            purpose: 'maskable'
           }
-        ]
+        ],
+        start_url: '.',
+        scope: '/PWA005/'
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        maximumFileSizeToCacheInBytes: 5000000
       }
     })
   ],

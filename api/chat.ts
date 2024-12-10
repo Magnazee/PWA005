@@ -1,14 +1,24 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
+const ALLOWED_ORIGINS = [
+  'https://magnazee.github.io',
+  'http://localhost:5173',
+  'http://localhost:4173'
+];
+
 export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
 ) {
+  const origin = request.headers.origin || '';
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : '';
+
   // Handle preflight request
   if (request.method === 'OPTIONS') {
-    response.setHeader('Access-Control-Allow-Origin', '*');
+    response.setHeader('Access-Control-Allow-Origin', allowedOrigin);
     response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     response.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key');
+    response.setHeader('Access-Control-Allow-Credentials', 'true');
     return response.status(200).end();
   }
 
@@ -34,7 +44,10 @@ export default async function handler(
 
     const data = await anthropicResponse.json();
 
-    response.setHeader('Access-Control-Allow-Origin', '*');
+    if (allowedOrigin) {
+      response.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+      response.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
     return response.status(anthropicResponse.status).json(data);
   } catch (error) {
     console.error('Error:', error);
