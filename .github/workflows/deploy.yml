@@ -20,17 +20,15 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'  # Match Vercel's Node.js version
           
-      - name: Install root dependencies
-        run: npm install
-        
-      - name: Install server dependencies
-        working-directory: server
+      - name: Install dependencies
         run: npm install
         
       - name: Build
         run: npm run build
+        env:
+          VITE_API_URL: 'https://pwa005.vercel.app/api'  # Set production API URL
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

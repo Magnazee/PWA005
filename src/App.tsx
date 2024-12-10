@@ -8,10 +8,8 @@ interface ChatMessage {
   content: string;
 }
 
-// Use Vite's environment variable syntax
-const API_URL = import.meta.env.PROD 
-  ? 'https://pwa005.vercel.app/api/chat'  // Production URL
-  : '/api/chat';  // Development proxy URL
+// Use environment variable with fallback for API URL
+const API_URL = import.meta.env.VITE_API_URL || '/api/chat';
 
 function App() {
   const { apiKey, setApiKey } = useApiKey()
