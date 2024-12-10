@@ -8,12 +8,10 @@ interface ChatMessage {
   content: string;
 }
 
-interface APIResponse {
-  content: Array<{
-    text: string;
-    type: string;
-  }>;
-}
+// Replace this with your Vercel deployment URL in production
+const API_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://pwa005.vercel.app/api/chat'  // We'll update this once deployed
+  : '/api/chat';
 
 function App() {
   const { apiKey, setApiKey } = useApiKey()
@@ -21,13 +19,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSendMessage = useCallback(async (message: string) => {
-    if (!apiKey) {
-      setMessages(prev => [...prev, { 
-        role: 'error', 
-        content: 'Please provide an API key before sending messages.' 
-      }])
-      return
-    }
+    if (!apiKey) return
 
     setIsLoading(true)
     setMessages(prev => [...prev, { role: 'user', content: message }])
@@ -40,37 +32,41 @@ function App() {
           content: msg.content
         }));
 
-      const response = await fetch('http://localhost:3000/api/chat', {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-api-key': apiKey
         },
         body: JSON.stringify({
+          model: "claude-3-sonnet-20241022",
+          max_tokens: 1024,
           messages: [...apiMessages, { role: 'user', content: message }],
-          apiKey: apiKey
-        }),
+          temperature: 0.7,
+        })
       });
 
-      const data: APIResponse = await response.json();
-      
       if (!response.ok) {
-        console.error('API error:', data);
-        throw new Error(data.content?.[0]?.text || 'Failed to get response from Claude');
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API request failed with status ${response.status}`);
       }
 
+      const data = await response.json();
+      
       if (data?.content?.[0]?.text) {
         setMessages(prev => [...prev, { role: 'assistant', content: data.content[0].text }]);
       } else {
-        console.error('Unexpected API response format:', data);
-        throw new Error('Received invalid response format from server. Check console for details.');
+        throw new Error('Unexpected API response format');
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      let errorMessage = 'Error sending message. Please try again.';
+      if (error instanceof Error) {
+        errorMessage = `Error: ${error.message}`;
+      }
       setMessages(prev => [...prev, { 
         role: 'error', 
-        content: error instanceof Error 
-          ? `Error: ${error.message}` 
-          : 'An unexpected error occurred. Please try again.'
+        content: errorMessage
       }]);
     } finally {
       setIsLoading(false)
