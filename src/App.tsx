@@ -9,7 +9,7 @@ interface ChatMessage {
 }
 
 // Use environment variable with fallback for API URL
-const API_URL = import.meta.env.VITE_API_URL || 'https://pwa005.vercel.app/api/chat';
+const API_URL = 'https://pwa005.vercel.app/api/chat';
 
 function App() {
   const { apiKey, setApiKey } = useApiKey()
@@ -30,12 +30,25 @@ function App() {
           content: msg.content
         }));
 
+      // First check if the API is accessible
+      const preflightResponse = await fetch(API_URL, {
+        method: 'OPTIONS',
+        headers: {
+          'Origin': window.location.origin
+        }
+      });
+
+      if (!preflightResponse.ok) {
+        throw new Error('API endpoint is not accessible. Please check your connection.');
+      }
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': apiKey
+          'x-api-key': apiKey,
         },
+        credentials: 'include',
         body: JSON.stringify({
           model: "claude-3-sonnet-20241022",
           max_tokens: 1024,
