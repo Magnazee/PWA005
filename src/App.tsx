@@ -8,10 +8,10 @@ interface ChatMessage {
   content: string;
 }
 
-// Replace this with your Vercel deployment URL in production
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://pwa005.vercel.app/api/chat'  // We'll update this once deployed
-  : '/api/chat';
+// Use Vite's environment variable syntax
+const API_URL = import.meta.env.PROD 
+  ? 'https://pwa005.vercel.app/api/chat'  // Production URL
+  : '/api/chat';  // Development proxy URL
 
 function App() {
   const { apiKey, setApiKey } = useApiKey()
