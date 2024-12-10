@@ -30,23 +30,14 @@ function App() {
           content: msg.content
         }));
 
-      // First check if the API is accessible
-      const preflightResponse = await fetch(API_URL, {
-        method: 'OPTIONS',
-        headers: {
-          'Origin': window.location.origin
-        }
-      });
-
-      if (!preflightResponse.ok) {
-        throw new Error('API endpoint is not accessible. Please check your connection.');
-      }
-
+      console.log('Sending request to:', API_URL);  // Debug log
+      
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
+          'Origin': 'https://magnazee.github.io'
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -57,12 +48,16 @@ function App() {
         })
       });
 
+      console.log('Response status:', response.status);  // Debug log
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `API request failed with status ${response.status}`);
+        const errorText = await response.text();
+        console.log('Error response:', errorText);  // Debug log
+        throw new Error(`API request failed with status ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('Response data:', data);  // Debug log
       
       if (data?.content?.[0]?.text) {
         setMessages(prev => [...prev, { role: 'assistant', content: data.content[0].text }]);
