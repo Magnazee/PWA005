@@ -37,13 +37,12 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
-          'Origin': 'https://magnazee.github.io'
+          'anthropic-version': '2023-06-01'
         },
-        credentials: 'include',
+        mode: 'cors',
         body: JSON.stringify({
-          model: "claude-3-sonnet-20241022",
-          max_tokens: 1024,
           messages: [...apiMessages, { role: 'user', content: message }],
+          max_tokens: 1024,
           temperature: 0.7,
         })
       });
@@ -51,9 +50,9 @@ function App() {
       console.log('Response status:', response.status);  // Debug log
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.log('Error response:', errorText);  // Debug log
-        throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+        const errorData = await response.json();
+        console.log('Error response:', errorData);  // Debug log
+        throw new Error(errorData.error?.message || `API request failed with status ${response.status}`);
       }
 
       const data = await response.json();

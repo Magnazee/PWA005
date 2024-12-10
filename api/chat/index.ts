@@ -7,7 +7,7 @@ const cors = promisify(
   Cors({
     origin: ['https://magnazee.github.io', 'http://localhost:5173', 'http://localhost:4173'],
     methods: ['POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'x-api-key'],
+    allowedHeaders: ['Content-Type', 'x-api-key', 'anthropic-version'],
     credentials: true,
     maxAge: 86400,  // Cache preflight requests for 24 hours
   })
@@ -36,24 +36,41 @@ export default async function handler(
       return response.status(400).json({ error: 'API key is required' });
     }
 
+    // Make the request to Anthropic's API
     const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey as string,
-        'anthropic-version': '2023-06-01',
+        'anthropic-version': '2023-06-01'
       },
-      body: JSON.stringify(request.body),
+      body: JSON.stringify({
+        ...request.body,
+        model: 'claude-3-sonnet-20240229'  // Override model to ensure correct version
+      })
     });
 
     const data = await anthropicResponse.json();
-    return response.status(anthropicResponse.status).json(data);
+
+    // If there's an error, format it properly
+    if (!anthropicResponse.ok) {
+      console.error('Anthropic API error:', data);
+      return response.status(anthropicResponse.status).json({
+        type: 'error',
+        error: data.error || { type: 'api_error', message: 'Unknown API error' }
+      });
+    }
+
+    return response.status(200).json(data);
 
   } catch (error) {
-    console.error('Error:', error);
-    // Even in case of error, ensure we have proper CORS headers
+    console.error('Server error:', error);
     return response.status(500).json({ 
-      error: error instanceof Error ? error.message : 'Internal server error'
+      type: 'error',
+      error: {
+        type: 'server_error',
+        message: error instanceof Error ? error.message : 'Internal server error'
+      }
     });
   }
 }
