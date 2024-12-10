@@ -23,11 +23,11 @@ jobs:
           node-version: '20'
           
       - name: Install root dependencies
-        run: npm ci
+        run: npm install
         
       - name: Install server dependencies
         working-directory: server
-        run: npm ci
+        run: npm install
         
       - name: Build
         run: npm run build
